@@ -17,8 +17,8 @@ def main():
     argument_parser = get_argument_parser()
     arguments = argument_parser.parse_args()
     lnd = Lnd(arguments.lnddir, arguments.grpc)
-    first_hop_channel_id = vars(arguments)['from']
-    to_channel = arguments.to
+    first_hop_channel_id = parse_channel_id(vars(arguments)['from'])
+    to_channel = parse_channel_id(arguments.to)
 
     if arguments.ratio < 1 or arguments.ratio > 50:
         print("--ratio must be between 1 and 50")
@@ -139,12 +139,10 @@ def get_argument_parser():
                                                 " the 'from' channel (-f) or the 'to' channel (-t).")
     rebalance_group.add_argument("-f", "--from",
                                  metavar="CHANNEL",
-                                 type=int,
                                  help="channel ID of the outgoing channel "
                                       "(funds will be taken from this channel)")
     rebalance_group.add_argument("-t", "--to",
                                  metavar="CHANNEL",
-                                 type=int,
                                  help="channel ID of the incoming channel "
                                       "(funds will be sent to this channel). "
                                       "You may also use the index as shown in the incoming candidate list (-l -i).")
@@ -249,6 +247,28 @@ def get_columns():
     else:
         return 80
 
+def lnd_to_cl_scid(s):
+    block = s >> 40
+    tx = s >> 16 & 0xFFFFFF
+    output = s  & 0xFFFF
+    return (block, tx, output)
+
+def cl_to_lnd_scid(s):
+    s = [int(i) for i in s.split(':')]
+    return (s[0] << 40) | (s[1] << 16) | s[2]
+
+def x_to_lnd_scid(s):
+    s = [int(i) for i in s.split('x')]
+    return (s[0] << 40) | (s[1] << 16) | s[2]
+
+def parse_channel_id(s):
+    if s == None:
+        return None
+    if ':' in s:
+        return int(cl_to_lnd_scid(s))
+    if 'x' in s:
+        return int(x_to_lnd_scid(s))
+    return int(s)
 
 success = main()
 if success:

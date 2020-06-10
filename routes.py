@@ -61,7 +61,12 @@ class Routes:
         else:
             self.num_requested_routes += 1
             for route in routes:
-                self.add_route(route)
+                # filter out last_hops that arrive back over the wrong channel, if -t is specified 
+                if self.last_hop_channel and route.hops[-1].chan_id != self.last_hop_channel.chan_id:
+                    #print("ignoring route " + str(route.hops[-1].chan_id) + " because wrong last hop (not " + str(self.last_hop_channel.chan_id) + ")")
+                    None
+                else:
+                    self.add_route(route)
 
     def add_route(self, route):
         if route is None:

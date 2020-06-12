@@ -9,6 +9,8 @@ import sys
 from lnd import Lnd
 from logic import Logic
 
+import fmt
+
 MAX_CHANNEL_CAPACITY = 16777215
 MAX_SATOSHIS_PER_TRANSACTION = 4294967
 
@@ -17,8 +19,8 @@ def main():
     argument_parser = get_argument_parser()
     arguments = argument_parser.parse_args()
     lnd = Lnd(arguments.lnddir, arguments.grpc)
-    first_hop_channel_id = parse_channel_id(vars(arguments)['from'])
-    to_channel = parse_channel_id(arguments.to)
+    first_hop_channel_id = fmt.parse_channel_id(vars(arguments)['from'])
+    to_channel = fmt.parse_channel_id(arguments.to)
 
     if arguments.ratio < 1 or arguments.ratio > 50:
         print("--ratio must be between 1 and 50")
@@ -68,7 +70,7 @@ def main():
         sys.exit(0)
 
     max_fee_factor = arguments.max_fee_factor
-    excluded = arguments.exclude
+    excluded = fmt.parse_channel_id(arguments.exclude)
     return Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
                  max_fee_factor).rebalance()
 
@@ -158,11 +160,10 @@ def get_argument_parser():
                                    "As an example, if this is set to 50, the amount will half of the default. "
                                    "See --amount.")
     rebalance_group.add_argument("-e", "--exclude",
-                                 type=int,
                                  action="append",
                                  help="Exclude the given channel ID as the outgoing channel (no funds will be taken "
                                       "out of excluded channels)")
-    rebalance_group.add_argument("--max-fee-factor",
+    rebalance_group.add_argument("-F", "--max-fee-factor",
                                  type=float,
                                  default=10,
                                  help="(default: 10) Reject routes that cost more than x times the lnd default "
@@ -189,7 +190,7 @@ def list_candidates(candidates):
         if rebalance_amount_int > MAX_SATOSHIS_PER_TRANSACTION:
             rebalance_amount += " (max per transaction: {:,})".format(MAX_SATOSHIS_PER_TRANSACTION)
 
-        print("(%2d) Channel ID:  " % index + str(candidate.chan_id))
+        print("(%2d) Channel ID:  " % index + fmt.print_chanid(candidate.chan_id))
         print("Pubkey:           " + candidate.remote_pubkey)
         print("Local ratio:      {:.3f}".format(get_local_ratio(candidate)))
         print("Capacity:         {:,}".format(candidate.capacity))
@@ -246,29 +247,6 @@ def get_columns():
         return int(os.popen('stty size', 'r').read().split()[1])
     else:
         return 80
-
-def lnd_to_cl_scid(s):
-    block = s >> 40
-    tx = s >> 16 & 0xFFFFFF
-    output = s  & 0xFFFF
-    return (block, tx, output)
-
-def cl_to_lnd_scid(s):
-    s = [int(i) for i in s.split(':')]
-    return (s[0] << 40) | (s[1] << 16) | s[2]
-
-def x_to_lnd_scid(s):
-    s = [int(i) for i in s.split('x')]
-    return (s[0] << 40) | (s[1] << 16) | s[2]
-
-def parse_channel_id(s):
-    if s == None:
-        return None
-    if ':' in s:
-        return int(cl_to_lnd_scid(s))
-    if 'x' in s:
-        return int(x_to_lnd_scid(s))
-    return int(s)
 
 success = main()
 if success:

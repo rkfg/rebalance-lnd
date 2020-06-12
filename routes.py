@@ -1,6 +1,8 @@
 import base64
 import sys
 
+import fmt
+
 MAX_ROUTES_TO_REQUEST = 100
 
 
@@ -61,10 +63,8 @@ class Routes:
         else:
             self.num_requested_routes += 1
             for route in routes:
-                # filter out last_hops that arrive back over the wrong channel, if -t is specified 
                 if self.last_hop_channel and route.hops[-1].chan_id != self.last_hop_channel.chan_id:
-                    #print("ignoring route " + str(route.hops[-1].chan_id) + " because wrong last hop (not " + str(self.last_hop_channel.chan_id) + ")")
-                    None
+                    None 
                 else:
                     self.add_route(route)
 
@@ -74,10 +74,8 @@ class Routes:
         if route not in self.all_routes:
             self.all_routes.append(route)
 
-    @staticmethod
-    def print_route(route):
-        route_str = " -> ".join(str(h.chan_id) for h in route.hops)
-        return route_str
+    def print_node_from_pubkey(self, pubkey):
+        return fmt.print_node(self.lnd.get_node_info(pubkey))
 
     def get_amount(self):
         return self.payment_request.num_satoshis
@@ -110,11 +108,12 @@ class Routes:
 
     def ignore_edge_from_to(self, chan_id, from_pubkey, to_pubkey, show_message=True):
         if show_message:
-            debug("ignoring channel %s (from %s to %s)" % (chan_id, from_pubkey, to_pubkey))
+            debug("ignoring channel %s (from %s to %s)" % 
+                (fmt.print_chanid(chan_id), self.print_node_from_pubkey(from_pubkey), self.print_node_from_pubkey(to_pubkey)) )
         direction_reverse = from_pubkey > to_pubkey
         edge = {"channel_id": chan_id, "direction_reverse": direction_reverse}
         self.ignored_edges.append(edge)
 
     def ignore_node(self, pub_key):
-        debug("ignoring node %s" % pub_key)
+        debug("ignoring node %s" % fmt.print_node(self.lnd.get_node_info(pub_key)))
         self.ignored_nodes.append(base64.b16decode(pub_key, True))

@@ -29,6 +29,7 @@ class Lnd:
         self.graph = None
         self.info = None
         self.channels = None
+        self.node_info = {}
 
     @staticmethod
     def get_credentials(lnd_dir):
@@ -43,6 +44,11 @@ class Lnd:
         if self.info is None:
             self.info = self.stub.GetInfo(ln.GetInfoRequest())
         return self.info
+
+    def get_node_info(self, nodepubkey):
+        if not nodepubkey in self.node_info:
+            self.node_info[nodepubkey] = self.stub.GetNodeInfo(ln.NodeInfoRequest(pub_key=nodepubkey))
+        return self.node_info[nodepubkey]
 
     def get_graph(self):
         if self.graph is None:

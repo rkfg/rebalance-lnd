@@ -1,5 +1,6 @@
 import sys
 
+import fmt
 from routes import Routes
 
 DEFAULT_BASE_FEE_SAT_MSAT = 1000
@@ -28,14 +29,14 @@ class Logic:
 
     def rebalance(self):
         if self.last_hop_channel:
-            debug(("Sending {:,} satoshis to rebalance to channel with ID %d"
-                   % self.last_hop_channel.chan_id).format(self.amount))
+            debug(("Sending {:,} satoshis to rebalance to channel with ID %s"
+                   % fmt.print_chanid(self.last_hop_channel.chan_id)).format(self.amount))
         else:
             debug("Sending {:,} satoshis.".format(self.amount))
         if self.channel_ratio != 0.5:
             debug("Channel ratio used is %d%%" % int(self.channel_ratio * 100))
         if self.first_hop_channel:
-            debug("Forced first channel has ID %d" % self.first_hop_channel.chan_id)
+            debug("Forced first channel has ID %s" % fmt.print_chanid(self.first_hop_channel.chan_id))
 
         payment_request = self.generate_invoice()
         routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel)
@@ -59,7 +60,7 @@ class Logic:
         tried_routes.append(route)
         debug("")
         debug("Trying route #%d" % len(tried_routes))
-        debug(Routes.print_route(route))
+        debug(fmt.print_route(route,self.lnd))
 
         response = self.lnd.send_payment(payment_request, route)
         is_successful = response.failure.code == 0
@@ -69,7 +70,7 @@ class Logic:
             debug("")
             debug("Success! Paid fees: %s sat (%s msat)" % (route.total_fees, route.total_fees_msat))
             debug("Successful route:")
-            debug(Routes.print_route(route))
+            debug(fmt.print_route(route, self.lnd))
             debug("")
             debug("")
             debug("")

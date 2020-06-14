@@ -109,11 +109,11 @@ class Routes:
     def ignore_edge_from_to(self, chan_id, from_pubkey, to_pubkey, show_message=True):
         if show_message:
             debug("ignoring channel %s (from %s to %s)" % 
-                (fmt.print_chanid(chan_id), self.print_node_from_pubkey(from_pubkey), self.print_node_from_pubkey(to_pubkey)) )
+                (fmt.col_lo(fmt.print_chanid(chan_id)), self.print_node_from_pubkey(from_pubkey), self.print_node_from_pubkey(to_pubkey)) )
         direction_reverse = from_pubkey > to_pubkey
         edge = {"channel_id": chan_id, "direction_reverse": direction_reverse}
         self.ignored_edges.append(edge)
 
     def ignore_node(self, pub_key):
-        debug("ignoring node %s" % fmt.print_node(self.lnd.get_node_info(pub_key)))
+        debug("ignoring node %s" % self.print_node_from_pubkey(pub_key))
         self.ignored_nodes.append(base64.b16decode(pub_key, True))

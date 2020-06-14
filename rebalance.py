@@ -1,10 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import math
 import os
 import platform
 import sys
+
+import colorama
+colorama.init()
 
 from lnd import Lnd
 from logic import Logic
@@ -190,9 +193,9 @@ def list_candidates(lnd, candidates):
         if rebalance_amount_int > MAX_SATOSHIS_PER_TRANSACTION:
             rebalance_amount += " (max per transaction: {:,})".format(MAX_SATOSHIS_PER_TRANSACTION)
 
-        print("(%2d) Channel ID:  " % index + fmt.print_chanid(candidate.chan_id))
-        print("Pubkey:           " + candidate.remote_pubkey)
-        print("Node alias:       " + lnd.get_node_info(candidate.remote_pubkey).node.alias)
+        print("(" + fmt.col_hi("%2d" % index) + ") Channel ID:  " + fmt.col_lo(fmt.print_chanid(candidate.chan_id)))
+        print("Pubkey:           " + fmt.col_lo(candidate.remote_pubkey))
+        print("Node alias:       " + fmt.col_name(lnd.get_node_info(candidate.remote_pubkey).node.alias))
         print("Local ratio:      {:.3f}".format(get_local_ratio(candidate)))
         print("Capacity:         {:,}".format(candidate.capacity))
         print("Remote balance:   {:,}".format(candidate.remote_balance))

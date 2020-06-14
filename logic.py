@@ -29,14 +29,14 @@ class Logic:
 
     def rebalance(self):
         if self.last_hop_channel:
-            debug(("Sending {:,} satoshis to rebalance to channel with ID %s"
-                   % fmt.print_chanid(self.last_hop_channel.chan_id)).format(self.amount))
+            debug(("Ⓘ Sending " + fmt.col_hi("{:,}") + " satoshis to rebalance to channel with ID %s"
+                   % fmt.col_lo(fmt.print_chanid(self.last_hop_channel.chan_id))).format(self.amount))
         else:
-            debug("Sending {:,} satoshis.".format(self.amount))
+            debug("Ⓘ Sending " + fmt.col_hi("{:,}") + " satoshis.".format(self.amount))
         if self.channel_ratio != 0.5:
-            debug("Channel ratio used is %d%%" % int(self.channel_ratio * 100))
+            debug("Ⓘ Channel ratio used is " + fmt.col_hi("%d%%" % int(self.channel_ratio * 100)))
         if self.first_hop_channel:
-            debug("Forced first channel has ID %s" % fmt.print_chanid(self.first_hop_channel.chan_id))
+            debug("Ⓘ Forced first channel has ID %s" % fmt.col_lo(fmt.print_chanid(self.first_hop_channel.chan_id)))
 
         payment_request = self.generate_invoice()
         routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel)
@@ -50,7 +50,8 @@ class Logic:
             success = self.try_route(payment_request, route, routes, tried_routes)
             if success:
                 return True
-        debug("Could not find any suitable route")
+        debug("")
+        debug(fmt.col_err("✘ Could not find any suitable route"))
         return False
 
     def try_route(self, payment_request, route, routes, tried_routes):
@@ -59,7 +60,7 @@ class Logic:
 
         tried_routes.append(route)
         debug("")
-        debug("Trying route #%d" % len(tried_routes))
+        debug("Ⓘ Trying route #%d" % len(tried_routes))
         debug(fmt.print_route(route,self.lnd))
 
         response = self.lnd.send_payment(payment_request, route)
@@ -67,12 +68,8 @@ class Logic:
         if is_successful:
             debug("")
             debug("")
-            debug("")
-            debug("Success! Paid fees: %s sat (%s msat)" % (route.total_fees, route.total_fees_msat))
-            debug("Successful route:")
-            debug(fmt.print_route(route, self.lnd))
-            debug("")
-            debug("")
+            debug(fmt.col_hi("✔ Success!") + " Paid fees: %s sat (%s msat)" % 
+                (fmt.col_hi(route.total_fees), route.total_fees_msat))
             debug("")
             return True
         else:
@@ -84,17 +81,17 @@ class Logic:
         code = response.failure.code
         failure_source_pubkey = Logic.get_failure_source_pubkey(response, route)
         if code == 15:
-            debugnobreak("Temporary channel failure, ")
+            debugnobreak("Ⓔ Temporary channel failure, ")
             routes.ignore_edge_on_route(failure_source_pubkey, route)
         elif code == 18:
-            debugnobreak("Unknown next peer, ")
+            debugnobreak("Ⓔ Unknown next peer, ")
             routes.ignore_edge_on_route(failure_source_pubkey, route)
         elif code == 12:
-            debugnobreak("Fee insufficient, ")
+            debugnobreak("Ⓔ Fee insufficient, ")
             routes.ignore_edge_on_route(failure_source_pubkey, route)
         else:
             debug(repr(response))
-            debug("Unknown error code %s" % repr(code))
+            debug("Ⓔ Unknown error code %s" % repr(code))
 
     @staticmethod
     def get_failure_source_pubkey(response, route):

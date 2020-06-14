@@ -73,7 +73,12 @@ def main():
         sys.exit(0)
 
     max_fee_factor = arguments.max_fee_factor
-    excluded = fmt.parse_channel_id(arguments.exclude)
+
+    excluded = []
+    if arguments.exclude:
+        for exclude in arguments.exclude:
+            excluded.append(fmt.parse_channel_id(exclude))
+
     return Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
                  max_fee_factor).rebalance()
 

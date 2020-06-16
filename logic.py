@@ -29,10 +29,10 @@ class Logic:
 
     def rebalance(self):
         if self.last_hop_channel:
-            debug(("Ⓘ Sending " + fmt.col_hi("{:,}") + " satoshis to rebalance to channel with ID %s"
-                   % fmt.col_lo(fmt.print_chanid(self.last_hop_channel.chan_id))).format(self.amount))
+            debug("Ⓘ Sending " + fmt.col_hi("{:,}".format(self.amount)) + " satoshis to rebalance to channel with ID %s"
+                   % fmt.col_lo(fmt.print_chanid(self.last_hop_channel.chan_id)))
         else:
-            debug("Ⓘ Sending " + fmt.col_hi("{:,}") + " satoshis.".format(self.amount))
+            debug("Ⓘ Sending " + fmt.col_hi("{:,}".format(self.amount)) + " satoshis.")
         if self.channel_ratio != 0.5:
             debug("Ⓘ Channel ratio used is " + fmt.col_hi("%d%%" % int(self.channel_ratio * 100)))
         if self.first_hop_channel:

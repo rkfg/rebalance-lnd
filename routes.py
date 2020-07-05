@@ -106,6 +106,21 @@ class Routes:
         debugnobreak("High fees (%s msat), " % max_fee_msat)
         self.ignore_node(pub_key)
 
+    def ignore_edge_with_highest_fee(self, route):
+        max_fee_msat = 0
+        max_fee_hop = None
+        next_hop = None
+        for hop in route.hops:
+            if next_hop is None:
+                next_hop = hop
+            if hop.fee_msat > max_fee_msat:
+                max_fee_msat = hop.fee_msat
+                max_fee_hop = hop
+                next_hop = None
+
+        debugnobreak("High fees (%s msat), " % max_fee_msat)
+        self.ignore_edge_from_to(next_hop.chan_id, max_fee_hop.pub_key, next_hop.pub_key)
+
     def ignore_edge_from_to(self, chan_id, from_pubkey, to_pubkey, show_message=True):
         if show_message:
             debug("ignoring channel %s (from %s to %s)" % 

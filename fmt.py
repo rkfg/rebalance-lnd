@@ -24,7 +24,7 @@ def parse_channel_id(s):
     return int(s)
 
 def print_route(route, lnd):
-    route_str = " ➜ " + "\n ➜ ".join( ("%s %s" % (col_lo(print_chanid(h.chan_id).ljust(14)), print_node(lnd.get_node_info(h.pub_key)) ) ) for h in route.hops)
+    route_str = " ➜ " + "\n ➜ ".join( ("%s %s (out fee msat %d)" % (col_lo(print_chanid(h.chan_id).ljust(14)), print_node(lnd.get_node_info(h.pub_key)), h.fee_msat ) ) for h in route.hops)
     return route_str
 
 def print_node(node_info):

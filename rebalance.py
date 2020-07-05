@@ -99,6 +99,9 @@ def get_amount(arguments, first_hop_channel, last_hop_channel):
     if arguments.amount:
         amount = min(amount, int(arguments.amount))
 
+    if arguments.force:
+        amount = arguments.amount
+
     amount = min(amount, MAX_SATOSHIS_PER_TRANSACTION)
 
     return amount
@@ -156,6 +159,18 @@ def get_argument_parser():
                                  help="channel ID of the incoming channel "
                                       "(funds will be sent to this channel). "
                                       "You may also use the index as shown in the incoming candidate list (-l -i).")
+    rebalance_group.add_argument("-e", "--exclude",
+                                 action="append",
+                                 help="Exclude the given channel ID as the outgoing channel (no funds will be taken "
+                                      "out of excluded channels)")
+    rebalance_group.add_argument("-F", "--max-fee-factor",
+                                 type=float,
+                                 default=10,
+                                 help="(default: 10) Reject routes that cost more than x times the lnd default "
+                                      "(base: 1 sat, rate: 1 millionth sat) per hop on average")
+    rebalance_group.add_argument("--force", action="store_true",
+                                 help="Force the amount of satoshis specified in --amount, overriding the target balance of 50/50")
+
     amount_group = rebalance_group.add_mutually_exclusive_group()
     amount_group.add_argument("-a", "--amount",
                               type=int,
@@ -167,15 +182,6 @@ def get_argument_parser():
                               help="Set the amount to send to a percentage of the amount required to rebalance. "
                                    "As an example, if this is set to 50, the amount will half of the default. "
                                    "See --amount.")
-    rebalance_group.add_argument("-e", "--exclude",
-                                 action="append",
-                                 help="Exclude the given channel ID as the outgoing channel (no funds will be taken "
-                                      "out of excluded channels)")
-    rebalance_group.add_argument("-F", "--max-fee-factor",
-                                 type=float,
-                                 default=10,
-                                 help="(default: 10) Reject routes that cost more than x times the lnd default "
-                                      "(base: 1 sat, rate: 1 millionth sat) per hop on average")
     return parser
 
 

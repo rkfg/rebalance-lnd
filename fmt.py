@@ -24,7 +24,17 @@ def parse_channel_id(s):
     return int(s)
 
 def print_route(route, lnd):
-    route_str = " ➜ " + "\n ➜ ".join( ("%s %s (out fee msat %d)" % (col_lo(print_chanid(h.chan_id).ljust(14)), print_node(lnd.get_node_info(h.pub_key)), h.fee_msat ) ) for h in route.hops)
+    route_str = ""
+    for i in range(0,len(route.hops)-1):
+        h = route.hops[i]
+        fee = ""
+        if (i > 0):
+            fee = str(route.hops[i-1].fee_msat)
+
+        route_str += " ➜ " + col_lo(print_chanid(h.chan_id).ljust(14))
+        route_str += col_hi(fee.ljust(7))
+        route_str += print_node(lnd.get_node_info(h.pub_key))
+        route_str += "\n"
     return route_str
 
 def print_node(node_info):

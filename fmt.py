@@ -25,7 +25,7 @@ def parse_channel_id(s):
 
 def print_route(route, lnd):
     route_str = ""
-    for i in range(0,len(route.hops)-1):
+    for i in range(0,len(route.hops)):
         h = route.hops[i]
         fee = ""
         if (i > 0):

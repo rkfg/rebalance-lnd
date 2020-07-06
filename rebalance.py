@@ -17,6 +17,8 @@ import fmt
 MAX_CHANNEL_CAPACITY = 16777215
 MAX_SATOSHIS_PER_TRANSACTION = 4294967
 
+def debug(message):
+    sys.stderr.write(message + "\n")
 
 def main():
     argument_parser = get_argument_parser()
@@ -86,8 +88,10 @@ def main():
 def get_amount(arguments, first_hop_channel, last_hop_channel):
     if last_hop_channel:
         amount = get_rebalance_amount(last_hop_channel)
+        balance_score = get_balance_score(last_hop_channel)
     else:
         amount = get_rebalance_amount(first_hop_channel)
+        balance_score = get_balance_score(first_hop_channel)
 
     if arguments.percentage:
         amount = int(round(amount * arguments.percentage / 100))
@@ -95,9 +99,14 @@ def get_amount(arguments, first_hop_channel, last_hop_channel):
     if last_hop_channel and first_hop_channel:
         rebalance_amount_from_channel = get_rebalance_amount(first_hop_channel)
         amount = min(amount, rebalance_amount_from_channel)
+        balance_score = max(get_balance_score(first_hop_channel), get_balance_score(last_hop_channel))
 
     if arguments.amount:
         amount = min(amount, int(arguments.amount))
+
+    if balance_score > arguments.ratio and not arguments.force:
+        debug("Ⓘ Channel ratio %d above specified threshold %d, not rebalancing." % (balance_score, arguments.ratio))
+        amount = 0
 
     if arguments.force:
         amount = arguments.amount
@@ -237,6 +246,9 @@ def get_local_ratio(channel):
     local = channel.local_balance
     return float(local) / (remote + local)
 
+
+def get_balance_score(channel):
+    return 50 - int(abs(get_local_ratio(channel) - 0.5) * 100)
 
 def get_remote_surplus(channel):
     return channel.remote_balance - channel.local_balance

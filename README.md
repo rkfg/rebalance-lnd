@@ -20,6 +20,12 @@ You need to install Python. The gRPC dependencies can be installed by running:
 $ pip install -r requirements.txt
 ```
 
+On some systems using Python 3, use pip3 instead:
+
+```
+$ pip3 install -r requirements.txt
+```
+
 ## Usage
 
 ### Command line arguments
@@ -60,6 +66,15 @@ rebalance:
                         channel ID of the incoming channel (funds will be sent
                         to this channel). You may also use the index as shown
                         in the incoming candidate list (-l -i).
+  -e EXCLUDE, --exclude EXCLUDE
+                        Exclude the given channel ID as the outgoing channel
+                        (no funds will be taken out of excluded channels)
+  -F MAX_FEE_FACTOR, --max-fee-factor MAX_FEE_FACTOR
+                        (default: 10) Reject routes that cost more than x
+                        times the lnd default (base: 1 sat, rate: 1 millionth
+                        sat) per hop on average
+  --force               Force the amount of satoshis specified in --amount,
+                        overriding the target balance of 50/50
   -a AMOUNT, --amount AMOUNT
                         Amount of the rebalance, in satoshis. If not
                         specified, the amount computed for a perfect rebalance
@@ -69,13 +84,6 @@ rebalance:
                         required to rebalance. As an example, if this is set
                         to 50, the amount will half of the default. See
                         --amount.
-  -e EXCLUDE, --exclude EXCLUDE
-                        Exclude the given channel ID as the outgoing channel
-                        (no funds will be taken out of excluded channels)
-  --max-fee-factor MAX_FEE_FACTOR
-                        (default: 10) Reject routes that cost more than x
-                        times the lnd default (base: 1 sat, rate: 1 millionth
-                        sat) per hop on average
 ```
 
 ### List of channels

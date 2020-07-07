@@ -143,6 +143,21 @@ For example, the following command tries to sends 20% of the amount required to 
 
 The maximum amount you can send in one transaction currently is limited (by the protocol) to 4,294,967 satoshis.
 
+## Docker
+
+You can build this repository and provide the LND directory & LND RPC location through environment variables. Example for Docker Compose:
+
+```yaml
+  rebalance-lnd:
+    build: https://github.com/accumulator/rebalance-lnd.git
+    environment:
+      - GRPC_LOCATION=lnd:10009
+      - LND_DIR=/lnd
+    user: 1000 # example
+    volumes:
+      - /path/to/lnd:/lnd:ro
+```
+
 ## Contributing
 
 Contributions are highly welcome!

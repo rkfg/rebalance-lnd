@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-ENTRYPOINT /app/rebalance.py --grpc ${GRPC_LOCATION} --lnddir ${LND_DIR}
+ENTRYPOINT /app/rebalance.py --grpc ${GRPC_LOCATION} --lnddir ${LND_DIR} "$@"

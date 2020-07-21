@@ -82,7 +82,7 @@ def main():
             excluded.append(fmt.parse_channel_id(exclude))
 
     return Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
-                 max_fee_factor).rebalance()
+                 max_fee_factor, arguments.deep).rebalance()
 
 
 def get_amount(arguments, first_hop_channel, last_hop_channel):
@@ -179,6 +179,8 @@ def get_argument_parser():
                                       "(base: 1 sat, rate: 1 millionth sat) per hop on average")
     rebalance_group.add_argument("--force", action="store_true",
                                  help="Force the amount of satoshis specified in --amount, overriding the target balance of 50/50")
+    rebalance_group.add_argument("--deep", action="store_true",
+                                 help="Try all edges, even if a node is consistenty expensive")
 
     amount_group = rebalance_group.add_mutually_exclusive_group()
     amount_group.add_argument("-a", "--amount",

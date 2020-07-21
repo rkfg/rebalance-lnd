@@ -16,7 +16,7 @@ def debugnobreak(message):
 
 
 class Logic:
-    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded, max_fee_factor):
+    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded, max_fee_factor, deep):
         self.lnd = lnd
         self.first_hop_channel = first_hop_channel
         self.last_hop_channel = last_hop_channel
@@ -26,6 +26,7 @@ class Logic:
         if excluded:
             self.excluded = excluded
         self.max_fee_factor = max_fee_factor
+        self.deep = deep
 
     def rebalance(self):
         if self.last_hop_channel:
@@ -39,7 +40,7 @@ class Logic:
             debug("Ⓘ Forced first channel has ID %s" % fmt.col_lo(fmt.print_chanid(self.first_hop_channel.chan_id)))
 
         payment_request = self.generate_invoice()
-        routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel)
+        routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel, self.deep)
 
         self.initialize_ignored_channels(routes)
 
@@ -66,7 +67,6 @@ class Logic:
         response = self.lnd.send_payment(payment_request, route)
         is_successful = response.failure.code == 0
         if is_successful:
-            debug("")
             debug("")
             debug(fmt.col_hi("✔ Success!") + " Paid fees: %s sat (%s msat)" % 
                 (fmt.col_hi(route.total_fees), route.total_fees_msat))

@@ -75,6 +75,7 @@ rebalance:
                         sat) per hop on average
   --force               Force the amount of satoshis specified in --amount,
                         overriding the target balance of 50/50
+  --deep                Try all edges, even if a node is consistenty expensive
   -a AMOUNT, --amount AMOUNT
                         Amount of the rebalance, in satoshis. If not
                         specified, the amount computed for a perfect rebalance

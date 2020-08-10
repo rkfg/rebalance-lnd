@@ -68,10 +68,14 @@ def main():
 
     first_hop_channel = get_channel_for_channel_id(lnd, first_hop_channel_id)
 
+    if first_hop_channel_id != None and first_hop_channel == None:
+        debug("Ⓔ from channel not usable (unknown channel, or channel not active)")
+        sys.exit(1)
+
     amount = get_amount(arguments, first_hop_channel, last_hop_channel)
 
     if amount == 0:
-        print("Amount is 0, nothing to do")
+        debug("Ⓘ Amount is 0, nothing to do")
         sys.exit(0)
 
     max_fee_factor = arguments.max_fee_factor

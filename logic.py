@@ -89,6 +89,9 @@ class Logic:
         elif code == 12:
             debugnobreak("Ⓔ Fee insufficient, ")
             routes.ignore_edge_on_route(failure_source_pubkey, route)
+        elif code == 14:
+            debugnobreak("Ⓔ Channel disabled, ")
+            routes.ignore_edge_on_route(failure_source_pubkey, route)
         else:
             debug(repr(response))
             debug("Ⓔ Unknown error code %s" % repr(code))
@@ -103,9 +106,15 @@ class Logic:
 
     def route_is_invalid(self, route, routes):
         first_hop = route.hops[0]
+        last_hop = route.hops[-1]
         if self.low_local_ratio_after_sending(first_hop, route.total_amt):
             debugnobreak("Low local ratio after sending, ")
             routes.ignore_first_hop(self.get_channel_for_channel_id(first_hop.chan_id))
+            return True
+        if first_hop.chan_id == last_hop.chan_id:
+            debugnobreak("First hop and last hop use same channel, ")
+            hop_before_last_hop = route.hops[-2]
+            routes.ignore_edge_from_to(last_hop.chan_id, hop_before_last_hop.pub_key, last_hop.pub_key)
             return True
         if self.fees_too_high(route):
             routes.ignore_edge_with_highest_fee(route)
@@ -140,6 +149,10 @@ class Logic:
     def get_channel_for_channel_id(self, channel_id):
         for channel in self.lnd.get_channels():
             if channel.chan_id == channel_id:
+                if not hasattr(channel, 'local_balance'):
+                    channel.local_balance = 0
+                if not hasattr(channel, 'remote_balance'):
+                    channel.remote_balance = 0
                 return channel
 
     def initialize_ignored_channels(self, routes):

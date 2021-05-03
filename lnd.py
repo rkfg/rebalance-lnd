@@ -103,6 +103,22 @@ class Lnd:
         except:
             return None
 
+    def build_route(self, path, amount, first_hop_channel_id):
+        hops = []
+        for p in path:
+            hops.append(base64.b16decode(p, True))
+        request = lnrouter.BuildRouteRequest(
+            amt_msat=amount * 1000,
+            final_cltv_delta=len(path)*40,
+            outgoing_chan_id=first_hop_channel_id,
+            hop_pubkeys=hops,
+        )
+        try:
+            response = self.router_stub.BuildRoute(request)
+            return response.route
+        except:
+            return None
+
     def send_payment(self, payment_request, route):
         last_hop = route.hops[-1]
         last_hop.mpp_record.payment_addr = payment_request.payment_addr

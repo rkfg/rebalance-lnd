@@ -48,6 +48,10 @@ def main():
         argument_parser.print_help()
         sys.exit(1)
 
+    if first_hop_channel_id is None and arguments.path is not None:
+        argument_parser.print_help()
+        sys.exit(1)
+
     percentage = arguments.percentage
     if percentage:
         if percentage < 1 or percentage > 100:
@@ -72,6 +76,18 @@ def main():
         debug("Ⓔ from channel not usable (unknown channel, or channel not active)")
         sys.exit(1)
 
+    # build hops array from CSV expanded arguments
+    hops = []
+    if arguments.path:
+        for path in arguments.path:
+            for subpath in path.split(","):
+                hops.append(subpath)
+
+        # ensure I am last hop
+        me = lnd.get_info().identity_pubkey
+        if not hops[-1] == me:
+            hops.append(me)
+
     amount = get_amount(arguments, first_hop_channel, last_hop_channel)
 
     if amount == 0:
@@ -86,7 +102,7 @@ def main():
             excluded.append(fmt.parse_channel_id(exclude))
 
     return Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
-                 max_fee_factor, arguments.deep).rebalance()
+                 max_fee_factor, arguments.deep, hops).rebalance()
 
 
 def get_amount(arguments, first_hop_channel, last_hop_channel):
@@ -185,6 +201,9 @@ def get_argument_parser():
                                  help="Force the amount of satoshis specified in --amount, overriding the target balance of 50/50")
     rebalance_group.add_argument("--deep", action="store_true",
                                  help="Try all edges, even if a node is consistenty expensive")
+    rebalance_group.add_argument("--path",
+                                 action="append",
+                                 help="(experimental) Specify the route as a list of pubkeys. Also specify --from channel. --to is ignored.")
 
     amount_group = rebalance_group.add_mutually_exclusive_group()
     amount_group.add_argument("-a", "--amount",

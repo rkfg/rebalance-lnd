@@ -16,7 +16,7 @@ def debugnobreak(message):
 
 
 class Logic:
-    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded, max_fee_factor, deep):
+    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded, max_fee_factor, deep, path):
         self.lnd = lnd
         self.first_hop_channel = first_hop_channel
         self.last_hop_channel = last_hop_channel
@@ -27,6 +27,7 @@ class Logic:
             self.excluded = excluded
         self.max_fee_factor = max_fee_factor
         self.deep = deep
+        self.path = path
 
     def rebalance(self):
         if self.last_hop_channel:
@@ -40,17 +41,24 @@ class Logic:
             debug("Ⓘ Forced first channel has ID %s" % fmt.col_lo(fmt.print_chanid(self.first_hop_channel.chan_id)))
 
         payment_request = self.generate_invoice()
-        routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel, self.deep)
 
-        self.initialize_ignored_channels(routes)
-
-        tried_routes = []
-        while routes.has_next():
-            route = routes.get_next()
-
-            success = self.try_route(payment_request, route, routes, tried_routes)
+        if self.path:
+            myroute = self.lnd.build_route(self.path, self.amount, self.first_hop_channel.chan_id)
+            success = self.try_route(payment_request, myroute, [myroute], [])
             if success:
                 return True
+        else:
+            routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel, self.deep)
+
+            self.initialize_ignored_channels(routes)
+
+            tried_routes = []
+            while routes.has_next():
+                route = routes.get_next()
+
+                success = self.try_route(payment_request, route, routes, tried_routes)
+                if success:
+                    return True
         debug("")
         debug(fmt.col_err("✘ Could not find any suitable route"))
         return False

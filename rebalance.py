@@ -101,8 +101,12 @@ def main():
         for exclude in arguments.exclude:
             excluded.append(fmt.parse_channel_id(exclude))
 
-    return Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
+    result = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
                  max_fee_factor, arguments.deep, hops).rebalance()
+
+    if not result:
+        sys.exit(2)
+    sys.exit(0)
 
 
 def get_amount(arguments, first_hop_channel, last_hop_channel):
@@ -300,7 +304,4 @@ def get_columns():
     else:
         return 80
 
-success = main()
-if success:
-    sys.exit(0)
-sys.exit(1)
+main()

@@ -44,11 +44,7 @@ def main():
             list_outgoing_candidates(lnd, channel_ratio)
         sys.exit(0)
 
-    if to_channel is None and first_hop_channel_id is None:
-        argument_parser.print_help()
-        sys.exit(1)
-
-    if first_hop_channel_id is None and arguments.path is not None:
+    if to_channel is None and first_hop_channel_id is None and arguments.path is None:
         argument_parser.print_help()
         sys.exit(1)
 
@@ -87,6 +83,19 @@ def main():
         me = lnd.get_info().identity_pubkey
         if not hops[-1] == me:
             hops.append(me)
+
+        # first hop when using --path
+        if first_hop_channel_id == None:
+            for channel in lnd.get_channels():
+                if channel.remote_pubkey == hops[0]:
+                    local_sats_available = channel.local_balance - channel.local_chan_reserve_sat
+                    if local_sats_available > int(arguments.amount):
+                        debug('Ⓘ Selecting outgoing channel %s' % fmt.col_lo(fmt.print_chanid(channel.chan_id)))
+                        first_hop_channel = channel
+                        break;
+            if first_hop_channel == None:
+                debug('Ⓔ Could not find a suitable channel to first hop')
+                sys.exit(1)
 
     amount = get_amount(arguments, first_hop_channel, last_hop_channel)
 
@@ -206,7 +215,7 @@ def get_argument_parser():
                                  help="Try all edges, even if a node is consistenty expensive")
     rebalance_group.add_argument("--path",
                                  action="append",
-                                 help="Specify the route as a list of pubkeys. Omit the first hop, instead specify --from channel. --to is ignored.")
+                                 help="Specify the route as a list of pubkeys. Optionally specify --from channel. --to is ignored.")
 
     amount_group = rebalance_group.add_mutually_exclusive_group()
     amount_group.add_argument("-a", "--amount",

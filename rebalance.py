@@ -194,8 +194,7 @@ def get_argument_parser():
                                       "You may also use the index as shown in the incoming candidate list (-l -i).")
     rebalance_group.add_argument("-e", "--exclude",
                                  action="append",
-                                 help="Exclude the given channel ID as the outgoing channel (no funds will be taken "
-                                      "out of excluded channels)")
+                                 help="Exclude the given channel ID in route finding.")
     rebalance_group.add_argument("-F", "--max-fee-factor",
                                  type=float,
                                  default=10,
@@ -207,7 +206,7 @@ def get_argument_parser():
                                  help="Try all edges, even if a node is consistenty expensive")
     rebalance_group.add_argument("--path",
                                  action="append",
-                                 help="(experimental) Specify the route as a list of pubkeys. Also specify --from channel. --to is ignored.")
+                                 help="Specify the route as a list of pubkeys. Omit the first hop, instead specify --from channel. --to is ignored.")
 
     amount_group = rebalance_group.add_mutually_exclusive_group()
     amount_group.add_argument("-a", "--amount",

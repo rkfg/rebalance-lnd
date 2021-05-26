@@ -14,7 +14,6 @@ def debug(message):
 def debugnobreak(message):
     sys.stderr.write(message)
 
-
 class Logic:
     def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded, max_fee_factor, deep, path):
         self.lnd = lnd
@@ -28,6 +27,7 @@ class Logic:
         self.max_fee_factor = max_fee_factor
         self.deep = deep
         self.path = path
+        self.my_pubkey = self.lnd.get_own_pubkey()
 
     def rebalance(self):
         if self.last_hop_channel:
@@ -174,3 +174,9 @@ class Logic:
             if channel.chan_id in self.excluded:
                 debugnobreak("Channel is excluded, ")
                 routes.ignore_first_hop(channel)
+            if not self.last_hop_channel:
+                remote = channel.remote_balance - self.amount
+                local = channel.local_balance + self.amount
+                ratio = float(local) / (remote + local)
+                if ratio > self.channel_ratio:
+                    routes.ignore_edge_from_to(channel.chan_id, channel.remote_pubkey, self.my_pubkey, show_message=False)

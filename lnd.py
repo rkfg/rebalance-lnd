@@ -116,8 +116,8 @@ class Lnd:
         try:
             response = self.router_stub.BuildRoute(request)
             return response.route
-        except:
-            return None
+        except Exception as e:
+            return e
 
     def send_payment(self, payment_request, route):
         last_hop = route.hops[-1]

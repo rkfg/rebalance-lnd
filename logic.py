@@ -44,6 +44,10 @@ class Logic:
 
         if self.path:
             myroute = self.lnd.build_route(self.path, self.amount, self.first_hop_channel.chan_id)
+            if isinstance(myroute, Exception):
+                debug("")
+                debug(fmt.col_err("✘ " + myroute.details()))
+                return False
             success = self.try_route(payment_request, myroute, [myroute], [])
             if success:
                 return True

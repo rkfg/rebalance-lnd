@@ -48,9 +48,16 @@ class Logic:
                 debug("")
                 debug(fmt.col_err("✘ " + myroute.details()))
                 return False
-            success = self.try_route(payment_request, myroute, [myroute], [])
-            if success:
-                return True
+            try:
+                success = self.try_route(payment_request, myroute, [myroute], [])
+                if success:
+                    return True
+            except:
+                # since we use --path, myroute isn't a real Routes object
+                # assume fees too high
+                debug(fmt.col_err("✘ fees too high"))
+                return False
+
         else:
             routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel, self.deep)
 

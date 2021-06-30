@@ -31,9 +31,9 @@ $ pip3 install -r requirements.txt
 ### Command line arguments
 ```
 usage: rebalance.py [-h] [--lnddir LNDDIR] [--grpc GRPC] [-r RATIO] [-l]
-                    [-o | -i] [-f CHANNEL] [-t CHANNEL]
-                    [-a AMOUNT | -p PERCENTAGE] [-e EXCLUDE]
-                    [--max-fee-factor MAX_FEE_FACTOR]
+                    [-o | -i] [-f CHANNEL] [-t CHANNEL] [-e EXCLUDE]
+                    [-F MAX_FEE_FACTOR] [--force] [--deep] [--path PATH]
+                    [-a AMOUNT | -p PERCENTAGE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -67,8 +67,7 @@ rebalance:
                         to this channel). You may also use the index as shown
                         in the incoming candidate list (-l -i).
   -e EXCLUDE, --exclude EXCLUDE
-                        Exclude the given channel ID as the outgoing channel
-                        (no funds will be taken out of excluded channels)
+                        Exclude the given channel ID in route finding.
   -F MAX_FEE_FACTOR, --max-fee-factor MAX_FEE_FACTOR
                         (default: 10) Reject routes that cost more than x
                         times the lnd default (base: 1 sat, rate: 1 millionth
@@ -76,6 +75,8 @@ rebalance:
   --force               Force the amount of satoshis specified in --amount,
                         overriding the target balance of 50/50
   --deep                Try all edges, even if a node is consistenty expensive
+  --path PATH           Specify the route as a list of pubkeys. Optionally
+                        specify --from channel. --to is ignored.
   -a AMOUNT, --amount AMOUNT
                         Amount of the rebalance, in satoshis. If not
                         specified, the amount computed for a perfect rebalance

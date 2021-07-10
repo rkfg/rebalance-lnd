@@ -68,6 +68,8 @@ rebalance:
                         in the incoming candidate list (-l -i).
   -e EXCLUDE, --exclude EXCLUDE
                         Exclude the given channel ID in route finding.
+  -E EXCLUDENODE, --excludenode EXCLUDENODE
+                        Exclude the given node ID in route finding.
   -F MAX_FEE_FACTOR, --max-fee-factor MAX_FEE_FACTOR
                         (default: 10) Reject routes that cost more than x
                         times the lnd default (base: 1 sat, rate: 1 millionth

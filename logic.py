@@ -15,15 +15,19 @@ def debugnobreak(message):
     sys.stderr.write(message)
 
 class Logic:
-    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded, max_fee_factor, deep, path):
+    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded_channels,
+            excluded_nodes, max_fee_factor, deep, path):
         self.lnd = lnd
         self.first_hop_channel = first_hop_channel
         self.last_hop_channel = last_hop_channel
         self.amount = amount
         self.channel_ratio = channel_ratio
-        self.excluded = []
-        if excluded:
-            self.excluded = excluded
+        self.excluded_channels = []
+        self.excluded_nodes = []
+        if excluded_channels:
+            self.excluded_channels = excluded_channels
+        if excluded_nodes:
+            self.excluded_nodes = excluded_nodes
         self.max_fee_factor = max_fee_factor
         self.deep = deep
         self.path = path
@@ -60,6 +64,7 @@ class Logic:
 
         else:
             routes = Routes(self.lnd, payment_request, self.first_hop_channel, self.last_hop_channel, self.deep)
+            routes.ignored_nodes = self.excluded_nodes
 
             self.initialize_ignored_channels(routes)
 
@@ -178,7 +183,7 @@ class Logic:
         for channel in self.lnd.get_channels():
             if self.low_local_ratio_after_sending(channel, self.amount):
                 routes.ignore_first_hop(channel, show_message=False)
-            if channel.chan_id in self.excluded:
+            if channel.chan_id in self.excluded_channels:
                 debugnobreak("Channel is excluded, ")
                 routes.ignore_first_hop(channel)
             if not self.last_hop_channel:

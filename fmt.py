@@ -23,6 +23,9 @@ def parse_channel_id(s):
         return int(x_to_lnd_scid(s))
     return int(s)
 
+def parse_node_id(s):
+    return bytes.fromhex(s)
+
 def print_route(route, lnd):
     route_str = ""
     for i in range(0,len(route.hops)):

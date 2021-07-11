@@ -105,13 +105,18 @@ def main():
 
     max_fee_factor = arguments.max_fee_factor
 
-    excluded = []
+    excluded_channels = []
     if arguments.exclude:
-        for exclude in arguments.exclude:
-            excluded.append(fmt.parse_channel_id(exclude))
+        for chan_id in arguments.exclude:
+            excluded_channels.append(fmt.parse_channel_id(chan_id))
 
-    result = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded,
-                 max_fee_factor, arguments.deep, hops).rebalance()
+    excluded_nodes = []
+    if arguments.excludenode:
+        for node_id in arguments.excludenode:
+            excluded_nodes.append(fmt.parse_node_id(node_id))
+
+    result = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded_channels,
+                 excluded_nodes, max_fee_factor, arguments.deep, hops).rebalance()
 
     if not result:
         sys.exit(2)
@@ -204,6 +209,9 @@ def get_argument_parser():
     rebalance_group.add_argument("-e", "--exclude",
                                  action="append",
                                  help="Exclude the given channel ID in route finding.")
+    rebalance_group.add_argument("-E", "--excludenode",
+                                 action="append",
+                                 help="Exclude the given node ID in route finding.")
     rebalance_group.add_argument("-F", "--max-fee-factor",
                                  type=float,
                                  default=10,

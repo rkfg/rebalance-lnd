@@ -15,13 +15,14 @@ def debugnobreak(message):
     sys.stderr.write(message)
 
 class Logic:
-    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded_channels,
-            excluded_nodes, max_fee_factor, deep, path):
+    def __init__(self, lnd, first_hop_channel, last_hop_channel, amount, channel_ratio_to, channel_ratio_from,
+            excluded_channels, excluded_nodes, max_fee_factor, deep, path):
         self.lnd = lnd
         self.first_hop_channel = first_hop_channel
         self.last_hop_channel = last_hop_channel
         self.amount = amount
-        self.channel_ratio = channel_ratio
+        self.channel_ratio_to = channel_ratio_to
+        self.channel_ratio_from = channel_ratio_from
         self.excluded_channels = []
         self.excluded_nodes = []
         if excluded_channels:
@@ -39,8 +40,10 @@ class Logic:
                    % fmt.col_lo(fmt.print_chanid(self.last_hop_channel.chan_id)))
         else:
             debug("Ⓘ Sending " + fmt.col_hi("{:,}".format(self.amount)) + " satoshis.")
-        if self.channel_ratio != 0.5:
-            debug("Ⓘ Channel ratio used is " + fmt.col_hi("%d%%" % int(self.channel_ratio * 100)))
+        if self.channel_ratio_to != 0.5:
+            debug("Ⓘ Incoming channel ratio used is " + fmt.col_hi("%d%%" % int(self.channel_ratio_to * 100)))
+        if self.channel_ratio_from != 0.5:
+            debug("Ⓘ Outgoing channel ratio used is " + fmt.col_hi("%d%%" % int(self.channel_ratio_from * 100)))
         if self.first_hop_channel:
             debug("Ⓘ Forced first channel has ID %s" % fmt.col_lo(fmt.print_chanid(self.first_hop_channel.chan_id)))
 
@@ -155,7 +158,7 @@ class Logic:
         remote = channel.remote_balance + total_amount
         local = channel.local_balance - total_amount
         ratio = float(local) / (remote + local)
-        return ratio < self.channel_ratio
+        return ratio < (1 - self.channel_ratio_from)
 
     def fees_too_high(self, route):
         hops_with_fees = len(route.hops) - 1
@@ -190,5 +193,5 @@ class Logic:
                 remote = channel.remote_balance - self.amount
                 local = channel.local_balance + self.amount
                 ratio = float(local) / (remote + local)
-                if ratio > self.channel_ratio:
+                if ratio > self.channel_ratio_to:
                     routes.ignore_edge_from_to(channel.chan_id, channel.remote_pubkey, self.my_pubkey, show_message=False)

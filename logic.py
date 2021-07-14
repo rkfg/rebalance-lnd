@@ -1,6 +1,8 @@
 import sys
 
 import fmt
+import os
+import time
 from routes import Routes
 
 DEFAULT_BASE_FEE_SAT_MSAT = 1000
@@ -33,6 +35,7 @@ class Logic:
         self.deep = deep
         self.path = path
         self.my_pubkey = self.lnd.get_own_pubkey()
+        self.stat_filename = None
 
     def rebalance(self):
         if self.last_hop_channel:
@@ -98,6 +101,21 @@ class Logic:
             debug(fmt.col_hi("✔ Success!") + " Paid fees: %s sat (%s msat)" % 
                 (fmt.col_hi(route.total_fees), route.total_fees_msat))
             debug("")
+            if self.stat_filename:
+                try:
+                    add_header = not os.path.isfile(self.stat_filename)
+                    with open(self.stat_filename, mode="a") as f:
+                        if add_header:
+                            f.write("timestamp,from_channel,to_channel,amount_msat,fees_msat\n")
+                        f.write("%d,%d,%d,%d,%d\n" % (
+                            int(time.time()),
+                            route.hops[0].chan_id,
+                            route.hops[-1].chan_id,
+                            route.total_amt_msat - route.total_fees_msat,
+                            route.total_fees_msat
+                            ))
+                except e:
+                    debug(fmt.col_err("✘ Error writing the stat file: %s" % e))
             return True
         else:
             self.handle_error(response, route, routes)

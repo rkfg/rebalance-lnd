@@ -2,6 +2,7 @@ import base64
 import sys
 
 import fmt
+import random
 
 MAX_ROUTES_TO_REQUEST = 100
 
@@ -30,7 +31,7 @@ class Routes:
 
     def has_next(self):
         self.update_routes()
-        return self.returned_routes < self.all_routes
+        return len(self.returned_routes) < len(self.all_routes)
 
     def get_next(self):
         self.update_routes()
@@ -42,7 +43,7 @@ class Routes:
 
     def update_routes(self):
         while True:
-            if self.returned_routes < self.all_routes:
+            if len(self.returned_routes) < len(self.all_routes):
                 return
             if self.num_requested_routes >= MAX_ROUTES_TO_REQUEST:
                 return
@@ -69,6 +70,7 @@ class Routes:
                     None 
                 else:
                     self.add_route(route)
+        self.all_routes = random.sample(self.all_routes, len(self.all_routes))
 
     def add_route(self, route):
         if route is None:

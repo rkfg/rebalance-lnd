@@ -79,6 +79,7 @@ class Lnd:
         if self.channels is None:
             request = ln.ListChannelsRequest(
                 active_only=True,
+                public_only=True,
             )
             self.channels = self.stub.ListChannels(request).channels
         return self.channels

@@ -30,7 +30,21 @@ def main():
     if arguments.ratio < 1 or arguments.ratio > 50:
         print("--ratio must be between 1 and 50")
         sys.exit(1)
-    channel_ratio = float(arguments.ratio) / 100
+
+    channel_ratio_from = float(arguments.ratio) / 100
+    channel_ratio_to = channel_ratio_from
+
+    if arguments.ratio_from is not None:
+        if arguments.ratio_from < 1 or arguments.ratio_from > 50:
+            print("--ratio-from must be between 1 and 50")
+            sys.exit(1)
+        channel_ratio_from = float(arguments.ratio_from) / 100
+
+    if arguments.ratio_to is not None:
+        if arguments.ratio_to < 1 or arguments.ratio_to > 50:
+            print("--ratio-to must be between 1 and 50")
+            sys.exit(1)
+        channel_ratio_to = float(arguments.ratio_to) / 100
 
     if arguments.incoming is not None and not arguments.list_candidates:
         print("--outgoing and --incoming only work in conjunction with --list-candidates")
@@ -39,9 +53,9 @@ def main():
     if arguments.list_candidates:
         incoming = arguments.incoming is None or arguments.incoming
         if incoming:
-            list_incoming_candidates(lnd, channel_ratio)
+            list_incoming_candidates(lnd, channel_ratio_to)
         else:
-            list_outgoing_candidates(lnd, channel_ratio)
+            list_outgoing_candidates(lnd, channel_ratio_from)
         sys.exit(0)
 
     if to_channel is None and first_hop_channel_id is None and arguments.path is None:
@@ -56,23 +70,36 @@ def main():
             sys.exit(1)
 
     # the 'to' argument might be an index, or a channel ID
-    if to_channel and to_channel < 10000:
+    if to_channel is not None and to_channel < 10000 and to_channel > 0:
         # here we are in the "channel index" case
         index = int(to_channel) - 1
-        candidates = get_incoming_rebalance_candidates(lnd, channel_ratio)
-        candidate = candidates[index]
-        last_hop_channel = candidate
+        candidates = get_incoming_rebalance_candidates(lnd, channel_ratio_to)
+        if index < len(candidates):
+            candidate = candidates[index]
+            last_hop_channel = candidate
+        else:
+            last_hop_channel = None
     else:
         # else the channel argument should be the channel ID
         last_hop_channel = get_channel_for_channel_id(lnd, to_channel)
 
-    first_hop_channel = get_channel_for_channel_id(lnd, first_hop_channel_id)
+    first_hop_channel = None
+    # the 'from' argument might be an index, or a channel ID
+    if first_hop_channel_id is not None and first_hop_channel_id < 10000 and first_hop_channel_id > 0:
+        # here we are in the "channel index" case
+        index = int(first_hop_channel_id) - 1
+        candidates = get_outgoing_rebalance_candidates(lnd, channel_ratio_from)
+        if index < len(candidates):
+            candidate = candidates[index]
+            first_hop_channel = candidate
+    else:
+        first_hop_channel = get_channel_for_channel_id(lnd, first_hop_channel_id)
 
-    if first_hop_channel_id != None and first_hop_channel == None:
+    if first_hop_channel_id is not None and first_hop_channel is None:
         debug("Ⓔ from channel not usable (unknown channel, or channel not active)")
         sys.exit(1)
 
-    # build hops array from CSV expanded arguments
+   # build hops array from CSV expanded arguments
     hops = []
     if arguments.path:
         for path in arguments.path:
@@ -85,7 +112,7 @@ def main():
             hops.append(me)
 
         # first hop when using --path
-        if first_hop_channel_id == None:
+        if first_hop_channel_id is None:
             for channel in lnd.get_channels():
                 if channel.remote_pubkey == hops[0]:
                     local_sats_available = channel.local_balance - channel.local_chan_reserve_sat
@@ -93,9 +120,13 @@ def main():
                         debug('Ⓘ Selecting outgoing channel %s' % fmt.col_lo(fmt.print_chanid(channel.chan_id)))
                         first_hop_channel = channel
                         break;
-            if first_hop_channel == None:
+            if first_hop_channel is None:
                 debug('Ⓔ Could not find a suitable channel to first hop')
                 sys.exit(1)
+
+    if last_hop_channel is None and first_hop_channel is None:
+        debug("Ⓔ Neither from nor to channel are usable (unknown channel, or channel not active)")
+        sys.exit(1)
 
     amount = get_amount(arguments, first_hop_channel, last_hop_channel)
 
@@ -115,8 +146,8 @@ def main():
         for node_id in arguments.excludenode:
             excluded_nodes.append(fmt.parse_node_id(node_id))
 
-    logic = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded_channels,
-                 excluded_nodes, max_fee_factor, arguments.deep, hops)
+    logic = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio_to, channel_ratio_from,
+            excluded_channels, excluded_nodes, max_fee_factor, arguments.deep, hops)
     if arguments.stat:
         logic.stat_filename = arguments.stat
 
@@ -181,6 +212,12 @@ def get_argument_parser():
                         help="(default: 50) ratio for channel imbalance between 1 and 50, "
                              "eg. 45 to only show channels (-l) with less than 45%% of the "
                              "funds on the local (-i) or remote (-o) side")
+    parser.add_argument("--ratio-to",
+                        type=int,
+                        help="(default: 50) ratio for incoming channel imbalance between 1 and 50.")
+    parser.add_argument("--ratio-from",
+                        type=int,
+                        help="(default: 50) ratio for outgoing channel imbalance between 1 and 50.")
     list_group = parser.add_argument_group("list candidates", "Show the unbalanced channels.")
     list_group.add_argument("-l", "--list-candidates", action="store_true",
                             help="list candidate channels for rebalance")

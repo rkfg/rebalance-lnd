@@ -115,8 +115,12 @@ def main():
         for node_id in arguments.excludenode:
             excluded_nodes.append(fmt.parse_node_id(node_id))
 
-    result = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded_channels,
-                 excluded_nodes, max_fee_factor, arguments.deep, hops).rebalance()
+    logic = Logic(lnd, first_hop_channel, last_hop_channel, amount, channel_ratio, excluded_channels,
+                 excluded_nodes, max_fee_factor, arguments.deep, hops)
+    if arguments.stat:
+        logic.stat_filename = arguments.stat
+
+    result = logic.rebalance()
 
     if not result:
         sys.exit(2)
@@ -224,6 +228,9 @@ def get_argument_parser():
     rebalance_group.add_argument("--path",
                                  action="append",
                                  help="Specify the route as a list of pubkeys. Optionally specify --from channel. --to is ignored.")
+    rebalance_group.add_argument("-s", "--stat",
+                                 type=str,
+                                 help="Save rebalancing statistics to a CSV file")
 
     amount_group = rebalance_group.add_mutually_exclusive_group()
     amount_group.add_argument("-a", "--amount",

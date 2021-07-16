@@ -122,7 +122,9 @@ class Routes:
 
         debugnobreak("High fees (%s msat), " % max_fee_msat)
 
-        if not self.deep and not (self.first_hop_channel != None and self.first_hop_channel == max_fee_hop.chan_id):
+        if not self.deep \
+            and not (self.first_hop_channel != None and self.first_hop_channel.remote_pubkey == max_fee_hop.pub_key):
+
             if max_fee_hop.pub_key in self.node_high_fee_edges:
                 self.node_high_fee_edges[max_fee_hop.pub_key] += 1
                 if self.node_high_fee_edges[max_fee_hop.pub_key] > 3:

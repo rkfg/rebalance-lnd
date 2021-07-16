@@ -30,10 +30,11 @@ $ pip3 install -r requirements.txt
 
 ### Command line arguments
 ```
-usage: rebalance.py [-h] [--lnddir LNDDIR] [--grpc GRPC] [-r RATIO] [-l]
+usage: rebalance.py [-h] [--lnddir LNDDIR] [--grpc GRPC] [-r RATIO]
+                    [--ratio-to RATIO_TO] [--ratio-from RATIO_FROM] [-l]
                     [-o | -i] [-f CHANNEL] [-t CHANNEL] [-e EXCLUDE]
-                    [-F MAX_FEE_FACTOR] [--force] [--deep] [--path PATH]
-                    [-a AMOUNT | -p PERCENTAGE]
+                    [-E EXCLUDENODE] [-F MAX_FEE_FACTOR] [--force] [--deep]
+                    [--path PATH] [-s STAT] [-a AMOUNT | -p PERCENTAGE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -44,6 +45,11 @@ optional arguments:
                         and 50, eg. 45 to only show channels (-l) with less
                         than 45% of the funds on the local (-i) or remote (-o)
                         side
+  --ratio-to RATIO_TO   (default: 50) ratio for incoming channel imbalance
+                        between 1 and 50.
+  --ratio-from RATIO_FROM
+                        (default: 50) ratio for outgoing channel imbalance
+                        between 1 and 50.
 
 list candidates:
   Show the unbalanced channels.
@@ -79,6 +85,7 @@ rebalance:
   --deep                Try all edges, even if a node is consistenty expensive
   --path PATH           Specify the route as a list of pubkeys. Optionally
                         specify --from channel. --to is ignored.
+  -s STAT, --stat STAT  Save rebalancing statistics to a CSV file
   -a AMOUNT, --amount AMOUNT
                         Amount of the rebalance, in satoshis. If not
                         specified, the amount computed for a perfect rebalance

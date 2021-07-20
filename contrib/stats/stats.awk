@@ -96,16 +96,22 @@ END {
     SORTBALCMD="sort -t '|' -grk 5 -k 3 -k 4"
   }
   if (IN) {
-    printf("\nInbound forwarding stats:\n" CHANFMT " | %13s | %-11s\n", CHANHEADER, "Amount", "Fees")
+    printf("\nInbound forwarding stats:\n" CHANFMT " | %13s | %-11s | %-6s\n", CHANHEADER, "Amount", "Fees", "ppm")
     for (c in inchan_amount) {
-      printf(CHANFMT " | %13.3f | %-11.3f\n", format_channel(c), inchan_amount[c] / 1000, inchan_fees[c] / 1000) | SORTCHANCMD
+      printf(CHANFMT " | %13.3f | %-11.3f | %-6.0f\n", format_channel(c),
+             inchan_amount[c] / 1000, inchan_fees[c] / 1000,
+             inchan_fees[c] * 1e6 / inchan_amount[c]) | SORTCHANCMD
     }
+    close(SORTCHANCMD)
   }
   if (OUT) {
-    printf("\nOutbound forwarding stats:\n" CHANFMT " | %13s | %-11s\n", CHANHEADER, "Amount", "Fees")
+    printf("\nOutbound forwarding stats:\n" CHANFMT " | %13s | %-11s | %-6s\n", CHANHEADER, "Amount", "Fees", "ppm")
     for (c in outchan_amount) {
-      printf(CHANFMT " | %13.3f | %-11.3f\n", format_channel(c), outchan_amount[c] / 1000, outchan_fees[c] / 1000) | SORTCHANCMD
+      printf(CHANFMT " | %13.3f | %-11.3f | %-6.0f\n", format_channel(c),
+             outchan_amount[c] / 1000, outchan_fees[c] / 1000,
+             outchan_fees[c] * 1e6 / outchan_amount[c]) | SORTCHANCMD
     }
+    close(SORTCHANCMD)
   }
   if (BALANCE) {
     delete bchans
@@ -128,5 +134,6 @@ END {
       printf(CHANFMT " | %13.3f | %-13.3f | %-13.3f\n", format_channel(c), inchan_amount[c] / 1000,
             outchan_amount[c] / 1000, bchans[c]) | SORTBALCMD
     }
-  }
+    close(SORTBALCMD)
+ }
 }

@@ -52,6 +52,13 @@ then
   exit 1
 fi
 
+which "${LNCLI}" >/dev/null
+if [ $? -ne 0 ]
+then
+  echo "Please specify path to lncli in this script."
+  exit 1
+fi
+
 if [ -z "$1" ]
 then
   echo "Specify the stats file name (e.g. stats.csv)"

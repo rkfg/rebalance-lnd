@@ -2,18 +2,20 @@
 LNCLI=lncli
 TZ="GMT"
 DAY=0
+TOTALFEES=0
 INCHANNELS=0
 OUTCHANNELS=0
 BALANCE=0
 ALIASES=0
 
 help() {
-    echo 'Usage: stats.sh [-d DAYS] [-i] [-o] [-b] [-a] [-h]
+    echo 'Usage: stats.sh [-d DAYS] [-t] [-i] [-o] [-b] [-a] [-h]
 Gather statistics about the earned fees and money spent on rebalancing channels
 
 Options:
 -d DAYS     Get stats for the DAYS day before today (1 for yesterday etc.),
             negative value means last -DAYS (e.g. -7 means "last 7 days")
+-t          Show total fees spent and earned
 -i          Show channels sorted by inbound money traffic
 -o          Show channels sorted by outbound money traffic
 -b          Show channels balanced by traffic score (in+out)/abs(in-out)-1, most active and balanced first
@@ -21,10 +23,12 @@ Options:
 '
 }
 
-while getopts d:iobah f
+while getopts d:tiobah f
 do
     case $f in
     d) DAY=$OPTARG
+    ;;
+    t) TOTALFEES=1
     ;;
     i) INCHANNELS=1
     ;;
@@ -67,4 +71,5 @@ fi
     ${LNCLI} fwdinghistory --start_time ${START} --end_time ${END} --max_events -1 |
      jq -r '.forwarding_events[] | "\(.timestamp),\(.chan_id_out),\(.chan_id_in),-\(.amt_out_msat),-\(.fee_msat)"'
     cat "$CSVFILE"
-} | awk -f stats.awk -v TSFROM=${START} -v TSTO=${END} -v IN=${INCHANNELS} -v OUT=${OUTCHANNELS} -v BALANCE=${BALANCE} -v ALIASES=${ALIASES}
+} | awk -f stats.awk -v TSFROM=${START} -v TSTO=${END} -v IN=${INCHANNELS} -v OUT=${OUTCHANNELS} \
+-v TOTALFEES=${TOTALFEES} -v BALANCE=${BALANCE} -v ALIASES=${ALIASES}

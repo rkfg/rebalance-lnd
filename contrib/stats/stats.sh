@@ -9,7 +9,7 @@ BALANCE=0
 ALIASES=0
 
 help() {
-    echo 'Usage: stats.sh [-d DAYS] [-t] [-i] [-o] [-b] [-a] [-h]
+    echo 'Usage: stats.sh [-d DAYS] [-t] [-i] [-o] [-b] [-a] [-h] stats.csv
 Gather statistics about the earned fees and money spent on rebalancing channels
 
 Options:
